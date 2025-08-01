@@ -34,7 +34,7 @@ jobs:
         target-type: [template_debug, template_release]
         float-precision: [single, double]
 
-    runs-on: ${{ matrix.target.os }}
+    runs-on: self-hosted
     steps:
       # Clone this repository
       - name: Checkout
@@ -104,7 +104,7 @@ jobs:
   # Merges all the build artifacts together into a single godot-cpp-template artifact.
   # If you comment out this step, all the builds will be uploaded individually.
   merge:
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
     needs: build
     steps:
       - name: Merge Artifacts
