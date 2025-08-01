@@ -1,5 +1,6 @@
 name: Build GDExtension
 on:
+  runs-on: self-hosted
   workflow_call:
   push:
   pull_request:
