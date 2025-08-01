@@ -1,0 +1,65 @@
+name: Build GDExtension
+
+on:
+  workflow_call:
+  push:
+  pull_request:
+  merge_group:
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install multilib support (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib g++-multilib
+
+      - name: Setup godot-cpp
+        uses: ./godot-cpp/.github/actions/setup-godot-cpp
+        with:
+          platform: linux
+          em-version: 3.1.62
+
+      - name: Restore .scons_cache
+        uses: ./godot-cpp/.github/actions/godot-cache-restore
+        with:
+          scons-cache: ${{ github.workspace }}/.scons-cache/
+          cache-name: linux_x86_64_single_debug
+
+      - name: Build GDExtension Debug Build
+        shell: bash
+        env:
+          SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
+        run: |
+          scons target=debug platform=linux arch=x86_64 precision=single
+
+      - name: Save .scons_cache
+        uses: ./godot-cpp/.github/actions/godot-cache-save
+        with:
+          scons-cache: ${{ github.workspace }}/.scons-cache/
+          cache-name: linux_x86_64_single_debug
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-cpp-template-linux-x86_64-single-debug
+          path: |
+            ${{ github.workspace }}/bin/**
+
+  merge:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: godot-cpp-template
+          pattern: godot-cpp-template-*
+          delete-merged: true
